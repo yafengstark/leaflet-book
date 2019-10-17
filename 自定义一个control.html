@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Leaflet1</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+          integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+            integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
+            crossorigin=""></script>
+
+
+    <!--<script src="https://cdnjs.com/libraries/leaflet-tilelayer-geojson"></script>-->
+    <style TYPE="text/css">
+        body {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        /**
+         * 单独设置mapid为100%不显示，可能float坍塌
+         */
+
+        html,
+        body,
+        #mapDiv {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+<div id="mapDiv">
+</div>
+</body>
+<script>
+    //地图地址
+    var url = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+    var attr = ' Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>';
+
+    var leafletMap = L.map('mapDiv').setView([51.505, -0.09], 4);
+    //图层
+    L.tileLayer(url, {
+        maxZoom: 18,
+        attribution: attr,
+        id: 'mapbox.streets'
+    }).addTo(leafletMap);
+
+
+
+    L.Control.Logo = L.Control.extend({
+        options: {
+            position: 'topright' //初始位置
+
+        },
+        initialize: function (options) {
+            L.Util.extend(this.options, options);
+
+        },
+        onAdd: function (map) {
+            //创建一个class为leaflet-control-clegend的div
+            this._container = L.DomUtil.create('div', 'leaflet-control-clegend');
+            //创建一个图片要素
+            var legendimg = document.createElement('img');
+            legendimg.id = 'leaflet-control-clegend';
+            legendimg.type = 'img';
+            legendimg.src = "../../Content/legend.png";
+            this._legendimg = legendimg;
+            //创建一个关闭控件的按钮
+            var closebutton = document.createElement('a');
+            closebutton.id = 'leaflet-control-geosearch-close';
+            closebutton.className = 'glyphicon glyphicon-remove';
+            this._closebutton = closebutton;
+
+            this._container.appendChild(this._closebutton);
+            this._container.appendChild(this._legendimg);
+            //注册关闭事件
+            L.DomEvent.addListener(this._closebutton, 'click', this._onCloseControl, this);
+
+            return this._container;
+        },
+        /**
+         *
+         * @private
+         */
+        _onCloseControl: function () {
+            this._map.options.Legend = false;
+            this.removeFrom(this._map);
+
+        },
+    });
+
+</script>
+
+</html>
