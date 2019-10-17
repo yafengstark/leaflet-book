@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Leaflet1</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+          integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+            integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
+            crossorigin=""></script>
+
+
+    <!--<script src="https://cdnjs.com/libraries/leaflet-tilelayer-geojson"></script>-->
+    <style TYPE="text/css">
+        body {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        /**
+         * 单独设置mapid为100%不显示，可能float坍塌
+         */
+
+        html,
+        body,
+        #mapDiv {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+<div id="mapDiv">
+</div>
+</body>
+<script>
+    // 使用算法
+
+
+    //地图地址
+    var url = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+    var attr = ' Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>';
+
+    var map = L.map('mapDiv').setView([26, 101], 5);
+    //图层
+    L.tileLayer(url, {
+        maxZoom: 18,
+        attribution: attr,
+        id: 'mapbox.streets'
+    }).addTo(map);
+    //标记点
+
+
+    L.marker([24, 100]).addTo(map)
+        .bindPopup("<b>Hello world!</b><br />我是一个冒泡窗").openPopup();
+
+    L.circle([24, 100], 500, {
+        color: 'red',
+        fillColor: '#f03',
+        fillOpacity: 0.5
+    }).addTo(map).bindPopup("我是一个圆");
+
+    L.polygon([{
+        lat: 26,
+        lng: 101
+    }, {
+        lat: 24,
+        lng: 120
+    }, {
+        lat: 35,
+        lng: 110
+    }]).addTo(map);
+
+    var popup = L.popup();
+
+    function points() {
+        var points = [{
+            lat: 26,
+            lng: 101
+        }, {
+            lat: 24,
+            lng: 120
+        }, {
+            lat: 35,
+            lng: 110
+        }]
+        return points;
+    }
+
+    function onMapClick(e) {
+        popup
+            .setLatLng(e.latlng)
+            .setContent("你刚点击的坐标是 " + e.latlng.toString())
+            .openOn(map);
+        /*var hh = IsPtInPoly(119.44336,25.20494, points());*/
+        var hh = IsPtInPoly(e.latlng.lng, e.latlng.lat, points());
+        alert(hh);
+    }
+
+    map.on('click', onMapClick);
+
+    function IsPtInPoly(ALon, ALat, APoints) {
+        var iSum = 0,
+            iCount;
+        var dLon1, dLon2, dLat1, dLat2, dLon;
+        if (APoints.length < 3) return false;
+        iCount = APoints.length;
+        for (var i = 0; i < iCount; i++) {
+            if (i == iCount - 1) {
+                dLon1 = APoints[i].lng;
+                dLat1 = APoints[i].lat;
+                dLon2 = APoints[0].lng;
+                dLat2 = APoints[0].lat;
+            } else {
+                dLon1 = APoints[i].lng;
+                dLat1 = APoints[i].lat;
+                dLon2 = APoints[i + 1].lng;
+                dLat2 = APoints[i + 1].lat;
+            }
+            //以下语句判断A点是否在边的两端点的水平平行线之间，在则可能有交点，开始判断交点是否在左射线上
+            if (((ALat >= dLat1) && (ALat < dLat2)) || ((ALat >= dLat2) && (ALat < dLat1))) {
+                if (Math.abs(dLat1 - dLat2) > 0) {
+                    //得到 A点向左射线与边的交点的x坐标：
+                    dLon = dLon1 - ((dLon1 - dLon2) * (dLat1 - ALat)) / (dLat1 - dLat2);
+                    if (dLon < ALon)
+                        iSum++;
+                }
+            }
+        }
+        if (iSum % 2 != 0)
+            return true;
+        return false;
+    }
+
+    //————————————————
+    //版权声明：本文为CSDN博主「neil89」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。
+    //原文链接：https://blog.csdn.net/neil89/article/details/50240481
+</script>
+
+</html>
