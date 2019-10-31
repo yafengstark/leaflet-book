@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Leaflet1</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+          integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+            integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
+            crossorigin=""></script>
+
+
+    <!--<script src="https://cdnjs.com/libraries/leaflet-tilelayer-geojson"></script>-->
+    <style TYPE="text/css">
+        body {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        /**
+         * 单独设置mapid为100%不显示，可能float坍塌
+         */
+
+        html,
+        body,
+        #mapDiv {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+<div id="mapDiv">
+</div>
+</body>
+<script>
+    //地图地址
+    var url = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+    var attr = ' Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>';
+
+    var leafletMap = L.map('mapDiv').setView([51.505, -0.09], 13);
+    //图层
+    L.tileLayer(url, {
+        maxZoom: 18,
+        attribution: attr,
+        id: 'mapbox.streets'
+    }).addTo(leafletMap);
+    //标记点
+
+    //中心点位置
+    var span = 0.01;// 度
+    var latlngCenter = L.latLng(51.508, -0.11);
+    //最右的点位置
+    var latlngSide = L.latLng(51.508 + span, -0.11);
+
+    var distance = latlngSide.distanceTo(latlngCenter);// 米
+
+
+    var styleNoChosed ={
+        color: 'red',
+        opacity: 0,
+        fillColor: '#d7ffe6',
+        fillOpacity: 0
+    };
+    var styleChosed ={
+        color: 'red',
+        opacity: 1,
+        fillColor: '#ff4038',
+        fillOpacity: 1
+    };
+    // 中心点
+    var centerPoint = L.circle(latlngCenter, 100, styleNoChosed);
+    //
+    var rightPoint = L.circle(latlngSide, 200, styleNoChosed);
+
+
+    //圆
+    // 500米
+    var circle = L.circle(latlngCenter, distance, {
+        color: 'red',
+        fillColor: '#f03',
+        fillOpacity: 0.5
+    });
+
+
+    circle.addTo(leafletMap).bindPopup("I am 圆.");
+    centerPoint.addTo(leafletMap).bindPopup("I am 中心点.");
+    rightPoint.addTo(leafletMap).bindPopup("I am 最右点.");
+
+
+    //
+
+    var flagCenter = false;
+    var clickNum = 0;
+
+
+    circle.on('mousedown', readyCenter);
+    circle.on('mousemove', moveCenter);
+    circle.on('mouseup', cancelCenter);
+
+    function readyCenter(e) {
+        flagCenter = true;
+        clickNum ++;
+        leafletMap.dragging.disable();
+
+        centerPoint.setStyle(styleChosed);
+        rightPoint.setStyle(styleChosed);
+    }
+
+    function cancelCenter(e) {
+        leafletMap.dragging.enable();
+        flagCenter = false;
+
+        if(clickNum % 2 === 0){
+            centerPoint.setStyle(styleNoChosed);
+            rightPoint.setStyle(styleNoChosed);
+        }
+
+
+    }
+
+    function moveCenter(e) {
+
+        if (flagCenter) {
+            var layer = e.target;
+
+            layer.setLatLng(e.latlng);
+            // 移动圆的同时移动中心点
+            centerPoint.setLatLng(e.latlng);
+            // 手动更新中心点坐标位置
+            latlngCenter = e.latlng;
+            // 移动边界点
+            latlngSide = L.latLng(e.latlng.lat + span, e.latlng.lng);
+            rightPoint.setLatLng(latlngSide);
+
+
+
+            layer.setStyle({
+                weight: 5,
+                color: '#b6ffae',
+                dashArray: '',
+                fillColor: '#b6ffae',
+                fillOpacity: 0.7
+            });
+
+            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                layer.bringToFront();
+            }
+        }
+
+
+    }
+
+    /**
+     * 点击边界点
+     */
+    var flagRight = false;
+
+
+    rightPoint.on('mousedown', readyRight);
+    rightPoint.on('mousemove', moveRight);
+    rightPoint.on('mouseup', cancelRight);
+
+    function readyRight(e) {
+        flagRight = true;
+        leafletMap.dragging.disable();
+
+
+    }
+
+    function cancelRight(e) {
+        leafletMap.dragging.enable();
+        flagRight = false;
+    }
+
+    function moveRight(e) {
+
+        if (flagRight) {
+            var layer = e.target;
+
+            layer.setLatLng(e.latlng);
+            //
+            latlngSide = e.latlng;
+
+            var distance = latlngCenter.distanceTo(latlngSide);
+            circle.setRadius(distance);
+
+
+
+            layer.setStyle({
+                weight: 5,
+                color: '#b6ffae',
+                dashArray: '',
+                fillColor: '#b6ffae',
+                fillOpacity: 0.7
+            });
+
+            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                layer.bringToFront();
+            }
+        }
+
+
+    }
+
+</script>
+
+</html>
